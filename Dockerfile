@@ -4,8 +4,8 @@ FROM dpage/pgadmin4
 # Cambia al usuario root
 USER root
 
-# Instala dependencias de Python para pgAdmin y psycopg2 build dependencies
-RUN apk update && apk add --no-cache python3 py3-pip postgresql-dev gcc musl-dev && pip3 install psycopg2
+# Instala dependencias de Python para pgAdmin
+RUN apk update && apk add --no-cache python3 py3-pip && pip3 install psycopg2-binary
 
 # Configura pgAdmin
 ENV PGADMIN_PORT=5050
