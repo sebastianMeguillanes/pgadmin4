@@ -11,10 +11,9 @@
 # Create a Node container which will be used to build the JS components
 # and clean up the web/ source code
 #########################################################################
+FROM debian:bullseye AS app-builder
 
-FROM alpine:latest AS app-builder
-
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     autoconf \
     automake \
     bash \
@@ -27,9 +26,9 @@ RUN apk add --no-cache \
     make \
     nasm \
     nodejs \
-    npm \
     yarn \
-    zlib-dev
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create the /pgadmin4 directory and copy the source into it. Explicitly
 # remove the node_modules directory as we'll recreate a clean version, as well
@@ -46,7 +45,6 @@ WORKDIR /pgadmin4/web
 
 # Build the JS vendor code in the app-builder, and then remove the vendor source.
 RUN export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
-    yarn set version berry && \
     yarn install && \
     yarn run bundle && \
     rm -rf node_modules \
@@ -62,29 +60,27 @@ RUN export CPPFLAGS="-DPNG_ARM_NEON_OPT=0" && \
 # Next, create the base environment for Python
 #########################################################################
 
-FROM alpine:latest AS env-builder
+FROM debian:bullseye as env-builder
 
 # Install dependencies
 COPY requirements.txt /
-RUN     apk add --no-cache \
-        make \
-        python3 \
-        py3-pip && \
-    apk add --no-cache --virtual build-deps \
-        build-base \
-        openssl-dev \
-        libffi-dev \
-        postgresql-dev \
-        krb5-dev \
-        rust \
-        cargo \
-        zlib-dev \
-        libjpeg-turbo-dev \
-        libpng-dev \
-        python3-dev && \
-    python3 -m venv --system-site-packages --without-pip /venv && \
-    /venv/bin/python3 -m pip install --no-cache-dir -r requirements.txt && \
-    apk del --no-cache build-deps
+RUN apt-get update && apt-get install -y \
+    python3.10 \
+    python3-venv \
+    python3.10-dev \
+    python3-pip \
+    postgresql-server-dev-all \
+    krb5-config \
+    libldap2-dev \
+    libffi-dev \
+    libssl-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/* && \
+    python3.10 -m venv --system-site-packages /venv && \
+    /venv/bin/python3.10 -m pip install --no-cache-dir -r requirements.txt
+
 
 #########################################################################
 # Now, create a documentation build container for the Sphinx docs
