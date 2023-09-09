@@ -1,22 +1,17 @@
-# Usa la imagen oficial de pgAdmin 4 desde Docker Hub
-FROM dpage/pgadmin4
+# Utiliza la imagen base de pgAdmin 4
+FROM docker.io/dpage/pgadmin4@sha256:2e3747c48b19a98124fa8c8f0e78857bbf494c2f6ee5d271c72917c37d1b3502
 
-# Cambia al usuario root
-USER root
-
-# Instala dependencias de Python para pgAdmin
+# Instala las dependencias necesarias
 RUN apk update && apk add --no-cache python3 py3-pip && pip3 install psycopg2-binary
 
-# Configura pgAdmin
-ENV PGADMIN_PORT=5050
+# Crea el directorio /etc/pgadmin si no existe
+RUN mkdir -p /etc/pgadmin
 
-# Agrega servidor de base de datos en pgAdmin
+# Crea el archivo servers.json con la configuración de PostgreSQL
 RUN echo "hostaddr=clmc31ap700kzpmcg8y9b8cxs port=5432 dbname=mydb username=admin password=admin1234" > /etc/pgadmin/servers.json
 
-# No es necesario exponer el puerto 5050, ya está configurado en la imagen oficial
+# Configura la variable de entorno PGADMIN_SERVER_JSON_FILE para apuntar al archivo servers.json recién creado
+ENV PGADMIN_SERVER_JSON_FILE=/etc/pgadmin/servers.json
 
-# Cambia de nuevo al usuario pgadmin
-USER pgadmin
-
-# Inicia pgAdmin al ejecutar el contenedor
-CMD ["pgadmin4"]
+# Ejecuta el servidor pgAdmin 4
+CMD [ "python3", "/usr/local/lib/python3.9/site-packages/pgadmin4/pgAdmin4.py" ]
