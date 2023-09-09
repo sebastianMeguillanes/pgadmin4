@@ -10,6 +10,10 @@ RUN apk update && apk add --no-cache python3 py3-pip && pip3 install psycopg2-bi
 # Crea el directorio /etc/pgadmin si no existe
 RUN mkdir -p /etc/pgadmin
 
+# Definir las variables de entorno para pgAdmin 4
+ENV PGADMIN_DEFAULT_EMAIL=sebas@gmail.com
+ENV PGADMIN_DEFAULT_PASSWORD=Perro.2023
+
 # Crea el archivo servers.json con la configuración de PostgreSQL
 RUN echo "hostaddr=clmc31ap700kzpmcg8y9b8cxs port=5432 dbname=mydb username=admin password=admin1234" > /etc/pgadmin/servers.json
 
